@@ -1,0 +1,9 @@
+date,product,region,units,revenue
+2026-01-05,Laptop,EU,12,14400
+2026-01-12,Phone,EU,30,21000
+2026-01-19,Laptop,MENA,8,9600
+2026-02-02,Phone,MENA,25,17500
+2026-02-14,Tablet,EU,15,6000
+2026-02-21,Laptop,EU,10,12000
+2026-03-03,Phone,EU,,23100
+2026-03-10,Tablet,MENA,20,8000

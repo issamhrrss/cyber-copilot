@@ -1,11 +1,9 @@
-# tools.py
 import re
-from pathlib import Path
 from crewai.tools import tool
+from agenthub.registry import register
+from agenthub.safeio import read_text_file
 
-MAX_CHARS = 30_000
-
-# (اسم الثغرة, النمط, الخطورة)
+# (name, regex, severity)
 PATTERNS = [
     ("SQL Injection", r"execute\(\s*(f[\"']|[\"'].*[\"']\s*(%|\+|\.format))", "HIGH"),
     ("SQL Injection (concat)", r"(SELECT|INSERT|UPDATE|DELETE).*(\+\s*\w+|\{\w+\})", "HIGH"),
@@ -21,32 +19,15 @@ PATTERNS = [
 ]
 
 
-def _safe_read(file_path: str) -> tuple[Path | None, str]:
-    p = Path(file_path).expanduser().resolve()
-    if not p.is_file():
-        return None, f"ERROR: file not found: {file_path}"
-    return p, p.read_text(encoding="utf-8", errors="replace")[:MAX_CHARS]
-
-
-@tool("read_code_file")
-def read_code_file(file_path: str) -> str:
-    """Read a source code file and return its content with line numbers."""
-    p, content = _safe_read(file_path)
-    if p is None:
-        return content
-    lines = content.splitlines()
-    return "\n".join(f"{i:>4}: {line}" for i, line in enumerate(lines, 1))
-
-
+@register
 @tool("static_pattern_scan")
 def static_pattern_scan(file_path: str) -> str:
-    """Run a quick regex-based scan for common vulnerability patterns.
-    Returns suspicious lines with line numbers. Results are hints, not proof."""
-    p, content = _safe_read(file_path)
-    if p is None:
-        return content
+    """Quick regex-based scan for common vulnerability patterns. Returns hints with line numbers, not proof."""
+    ok, text = read_text_file(file_path)
+    if not ok:
+        return text
     findings = []
-    for lineno, line in enumerate(content.splitlines(), 1):
+    for lineno, line in enumerate(text.splitlines(), 1):
         for name, pattern, severity in PATTERNS:
             if re.search(pattern, line, re.IGNORECASE):
                 findings.append(f"[{severity}] line {lineno}: {name} -> {line.strip()}")

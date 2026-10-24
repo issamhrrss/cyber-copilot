@@ -1,0 +1,35 @@
+description: "Analyze a CSV file and answer a business question with findings and recommendations."
+process: sequential
+inputs:
+  data_file: "Path to the CSV file"
+  question: "The question to answer about the data"
+
+agents:
+  analyst:
+    role: Data Analyst
+    goal: Extract accurate insights from tabular data.
+    backstory: >
+      You are a careful analyst. You only state facts that are supported by the data summary
+      and you say clearly when the data is not enough to answer.
+    tools: [csv_summary]
+  writer:
+    role: Business Report Writer
+    goal: Turn analysis results into a short, clear report.
+    backstory: You write concise reports for non-technical managers.
+
+tasks:
+  analyze:
+    agent: analyst
+    description: |
+      Use csv_summary on the file: {data_file}
+      Then answer this question using only the data: {question}
+      Mention data quality issues (missing values, odd ranges) if you find any.
+    expected_output: Key findings with supporting numbers.
+  report:
+    agent: writer
+    context: [analyze]
+    final: true
+    description: >
+      Write a Markdown report: Question, Short Answer, Key Findings, Data Quality Notes,
+      Recommendations.
+    expected_output: A concise Markdown report.
